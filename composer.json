@@ -1,0 +1,34 @@
+{
+    "name": "campaignchain/channel-salesforce",
+    "description": "Connect to Salesforce",
+    "keywords": ["campaignchain"],
+    "type": "campaignchain-channel",
+    "license": "Apache-2.0",
+    "homepage": "http://www.campaignchain.com",
+    "authors": [
+        {
+            "name": "CampaignChain, Inc.",
+            "email": "info@campaignchain.com"
+        }
+    ],
+    "require": {
+    },
+    "autoload": {
+        "psr-4": { "CampaignChain\\Channel\\SalesforceBundle\\": "" }
+    },
+    "extra": {
+        "campaignchain": {
+            "kernel": {
+                "classes": [
+                    "CampaignChain\\Channel\\SalesforceBundle\\CampaignChainChannelSalesforceBundle"
+                ],
+                "routing":
+                {
+                    "name": "campaignchain_channel_salesforce",
+                    "resource": "@CampaignChainChannelSalesforceBundle/Resources/config/routing.yml",
+                    "prefix": "/"
+                }
+            }
+        }
+    }
+}

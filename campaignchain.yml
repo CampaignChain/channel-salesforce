@@ -1,0 +1,9 @@
+
+modules:
+    campaignchain-salesforce:
+        display_name: Salesforce
+        description: Connect to Salesforce
+        routes: 
+            new: campaignchain_channel_salesforce_create
+        hooks:
+            default:
