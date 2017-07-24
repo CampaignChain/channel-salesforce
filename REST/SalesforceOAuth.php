@@ -26,15 +26,36 @@ class Hybrid_Providers_Salesforce extends Hybrid_Provider_Model_OAuth2
 	// (no scope)
 	public $scope = "";
 
+	public $userProfileUrl = 'https://login.salesforce.com/services/oauth2/userinfo';
+
 	/**
 	* IDp wrappers initializer 
 	*/
-	function initialize() 
+	public function initialize()
 	{
-		parent::initialize();
+        parent::initialize();
 
-		// Provider api end-points
-        $this->api->authorize_url   = "https://login.salesforce.com/services/oauth2/authorize";
-		$this->api->token_url       = "https://login.salesforce.com/services/oauth2/token";
+	    if(isset($this->config['is_sandbox']) && $this->config['is_sandbox'] == 1){
+            // Provider api end-points for Salesforce sandboxes
+            $this->api->authorize_url   = "https://test.salesforce.com/services/oauth2/authorize";
+            $this->api->token_url       = "https://test.salesforce.com/services/oauth2/token";
+            $this->userProfileUrl       = 'https://test.salesforce.com/services/oauth2/userinfo';
+        } else {
+            // Provider api end-points for Salesforce production environment
+            $this->api->authorize_url   = "https://login.salesforce.com/services/oauth2/authorize";
+            $this->api->token_url       = "https://login.salesforce.com/services/oauth2/token";
+        }
 	}
+
+    /**
+     * load the user profile from the IDp api client
+     */
+    function getUserProfile()
+    {
+        $this->api->curl_header = array(
+            'Authorization: Bearer '.$this->api->access_token,
+        );
+        $data = $this->api->get( $this->userProfileUrl );
+        return json_decode(json_encode($data), true);
+    }
 }

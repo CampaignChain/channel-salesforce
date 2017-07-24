@@ -18,6 +18,7 @@
 namespace CampaignChain\Channel\SalesforceBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
 
 class SalesforceController extends Controller
 {
@@ -55,6 +56,7 @@ class SalesforceController extends Controller
 
     public function loginAction(Request $request){
         $oauth = $this->get('campaignchain.security.authentication.client.oauth.authentication');
+        $this->applicationInfo['parameters']['is_sandbox'] = $request->get('is_sandbox');
         $status = $oauth->authenticate(self::RESOURCE_OWNER, $this->applicationInfo);
 
         if($status){

@@ -19,7 +19,12 @@ limitations under the License.
 {% block body %}
      <div class="jumbotron">
          <p>Connect to a Salesforce account by logging in to Salesforce. The username and password will remain with Salesforce and will not be stored in this application.</p>
-         <p><a class="btn btn-primary btn-lg" role="button" onclick="popupwindow('{{ path('campaignchain_channel_clearbit_login') }}','',600,600);">Connect with Salesforce</a></p>
+         <p>
+         <div class="btn-group" role="group" aria-label="...">
+             <a class="btn btn-primary btn-lg" role="button" onclick="popupwindow('{{ path('campaignchain_channel_salesforce_login') }}','',600,600);">Connect to Production Environment</a>
+             <a class="btn btn-default btn-lg" role="button" onclick="popupwindow('{{ path('campaignchain_channel_salesforce_login', { 'is_sandbox': true }) }}','',600,600);">Connect to Sandbox</a>
+         </div>
+         </p>
      </div>
 
  {% endblock %}
