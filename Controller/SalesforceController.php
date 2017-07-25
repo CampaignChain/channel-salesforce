@@ -17,12 +17,16 @@
 
 namespace CampaignChain\Channel\SalesforceBundle\Controller;
 
+use CampaignChain\Location\SalesforceBundle\Entity\SalesforceUser;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use CampaignChain\CoreBundle\Entity\Location;
 
 class SalesforceController extends Controller
 {
     const RESOURCE_OWNER = 'Salesforce';
+    const LOCATION_BUNDLE = 'campaignchain/location-salesforce';
+    const LOCATION_MODULE = 'campaignchain-salesforce-user';
 
     private $applicationInfo = array(
         'key_labels' => array('id', 'Client ID'),
@@ -60,10 +64,61 @@ class SalesforceController extends Controller
         $status = $oauth->authenticate(self::RESOURCE_OWNER, $this->applicationInfo);
 
         if($status){
-            $this->get('session')->getFlashBag()->add(
-                'success',
-                'The location <a href="#">'.$profile->displayName.'</a> was connected successfully.'
-            );
+            $em = $this->getDoctrine()->getManager();
+
+            try {
+                $em->getConnection()->beginTransaction();
+
+                $profile = $oauth->getProfile();
+                print_r($profile);
+                $wizard = $this->get('campaignchain.core.channel.wizard');
+                $wizard->setName($profile['nickname']);
+
+                // Get the location module.
+                $locationService = $this->get('campaignchain.core.location');
+                $locationModule = $locationService->getLocationModule(self::LOCATION_BUNDLE, self::LOCATION_MODULE);
+
+                $location = new Location();
+                $location->setIdentifier($profile['user_id']);
+                $location->setName($profile['nickname']);
+                $location->setImage($profile['picture']);
+                $location->setUrl($profile['profile']);
+                $location->setLocationModule($locationModule);
+                $wizard->addLocation($location->getIdentifier(), $location);
+
+                $channel = $wizard->persist();
+                $wizard->end();
+
+                $oauth->setLocation($channel->getLocations()[0]);
+
+                $user = new SalesforceUser();
+                $user->setLocation($channel->getLocations()[0]);
+                $user->setEmail($profile['email']);
+                $user->setEmailVerified($profile['email_verified']);
+                $user->setFirstName($profile['given_name']);
+                $user->setLastName($profile['family_name']);
+                $user->setNickname($profile['nickname']);
+                $user->setOrganizationId($profile['organization_id']);
+                $user->setPhoneNumber($profile['phone_number']);
+                $user->setPhoneNumberVerified($profile['phone_number_verified']);
+                $user->setPictureUrl($profile['picture']);
+                $user->setProfileUrl($profile['profile']);
+                $user->setUserId($profile['user_id']);
+                $user->setZoneinfo($profile['zoneinfo']);
+
+                $em->persist($user);
+                $em->flush();
+
+                $em->getConnection()->commit();
+
+                $this->get('session')->getFlashBag()->add(
+                    'success',
+                    'Salesforce was connected successfully with user "'.$profile['nickname'].'"'
+                );
+            } catch (\Exception $e) {
+                $em->getConnection()->rollback();
+                throw $e;
+            }
         } else {
             $this->get('session')->getFlashBag()->add(
                 'warning',
