@@ -33,12 +33,18 @@ class Configuration implements ConfigurationInterface
     public function getConfigTreeBuilder()
     {
         $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('campaign_chain_channel_salesforce');
+        $rootNode = $treeBuilder->root('campaignchain_channel_salesforce');
 
-        // Here you should define the parameters that are allowed to
-        // configure your bundle. See the documentation linked above for
-        // more information on that topic.
-
+        $rootNode
+            ->children()
+            ->arrayNode('rest_api')
+                ->children()
+                    ->scalarNode('version')
+                    ->isRequired()
+                    ->cannotBeEmpty()
+                ->end()
+            ->end()
+        ->end();
         return $treeBuilder;
     }
 }

@@ -44,6 +44,7 @@ class Hybrid_Providers_Salesforce extends Hybrid_Provider_Model_OAuth2
             // Provider api end-points for Salesforce production environment
             $this->api->authorize_url   = "https://login.salesforce.com/services/oauth2/authorize";
             $this->api->token_url       = "https://login.salesforce.com/services/oauth2/token";
+            $this->userProfileUrl       = 'https://login.salesforce.com/services/oauth2/userinfo';
         }
 	}
 
@@ -56,6 +57,15 @@ class Hybrid_Providers_Salesforce extends Hybrid_Provider_Model_OAuth2
             'Authorization: Bearer '.$this->api->access_token,
         );
         $data = $this->api->get( $this->userProfileUrl );
-        return json_decode(json_encode($data), true);
+        $data = json_decode(json_encode($data), true);
+
+        /*
+         * Get the base URL with the instance to store it along with the
+         * Token data.
+         */
+        $urlParts = parse_url($data['profile']);
+        $this->api->api_base_url = $urlParts['scheme'].'://'.$urlParts['host'];
+
+        return $data;
     }
 }

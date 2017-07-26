@@ -11,3 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+campaignchain_channel_salesforce:
+    rest_api:
+        # The version number of the Salesforce API. Please provide it without
+        # "v" prefixed. Find the available versions here:
+        # https://yourInstance.salesforce.com/services/data/
+        version: 40.0

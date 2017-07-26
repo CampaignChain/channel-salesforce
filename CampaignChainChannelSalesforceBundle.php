@@ -17,8 +17,13 @@
 
 namespace CampaignChain\Channel\SalesforceBundle;
 
+use CampaignChain\Channel\SalesforceBundle\DependencyInjection\CampaignChainChannelSalesforceExtension;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 class CampaignChainChannelSalesforceBundle extends Bundle
 {
+    public function getContainerExtension()
+    {
+        return new CampaignChainChannelSalesforceExtension();
+    }
 }

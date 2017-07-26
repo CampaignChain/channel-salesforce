@@ -13,35 +13,11 @@
 # limitations under the License.
 
 parameters:
-    campaignchain.channel.salesforce:
-        rest_api:
-            version: 40
-            # Provide the key of the children of the 'urls' value as returned by
-            # https://login.salesforce.com/services/oauth2/userinfo
-            # for those endpoints that our REST client must have access to.
-            #
-            # Available options are:
-            # - enterprise
-            # - metadata
-            # - partner
-            # - rest
-            # - sobjects
-            # - search
-            # - query
-            # - recent
-            # - tooling_soap
-            # - tooling_rest
-            # - profile
-            # - feeds
-            # - groups
-            # - users
-            # - feed_items
-            # - feed_elements
-            # - custom_domain
-            required_endpoints:
-                - sobjects
 
 services:
-#    campaign_chain_channel_salesforce.example:
-#        class: CampaignChain\Channel\SalesforceBundle\Example
-#        arguments: [@service_id, "plain_value", %parameter%]
+    campaignchain.channel.salesforce.rest.client:
+        class: CampaignChain\Channel\SalesforceBundle\REST\SalesforceClient
+        arguments:
+            - "%campaignchain_channel_salesforce.rest_api.version%"
+            - "@campaignchain.security.authentication.client.oauth.application"
+            - "@campaignchain.security.authentication.client.oauth.token"

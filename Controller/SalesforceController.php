@@ -113,7 +113,7 @@ class SalesforceController extends Controller
 
                 $this->get('session')->getFlashBag()->add(
                     'success',
-                    'Salesforce was connected successfully with user "'.$profile['nickname'].'"'
+                    'Salesforce was connected successfully with user "'.$profile['given_name'].' '.$profile['family_name'].' ('.$profile['nickname'].')"'
                 );
             } catch (\Exception $e) {
                 $em->getConnection()->rollback();
