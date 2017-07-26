@@ -76,9 +76,21 @@ class SalesforceClient
         }
     }
 
-    public function getLead($objectId)
+    public function getLeadById($objectId)
     {
         $res = $this->client->request('sobjects/Lead/'.$objectId);
+        return json_decode($res->getBody());
+    }
+
+    /**
+     * See https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_query.htm
+     *
+     * @param $soql The SOQL statement: https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/sforce_api_calls_soql_select.htm
+     * @return mixed
+     */
+    public function getQuery($soql)
+    {
+        $res = $this->client->request('query/?q='.urlencode($soql));
         return json_decode($res->getBody());
     }
 }
