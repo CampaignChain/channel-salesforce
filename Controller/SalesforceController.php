@@ -70,7 +70,7 @@ class SalesforceController extends Controller
                 $em->getConnection()->beginTransaction();
 
                 $profile = $oauth->getProfile();
-                print_r($profile);
+
                 $wizard = $this->get('campaignchain.core.channel.wizard');
                 $wizard->setName($profile['nickname']);
 
