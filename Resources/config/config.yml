@@ -17,4 +17,4 @@ campaignchain_channel_salesforce:
         # The version number of the Salesforce API. Please provide it without
         # "v" prefixed. Find the available versions here:
         # https://yourInstance.salesforce.com/services/data/
-        version: 40.0
+        version: "40.0"

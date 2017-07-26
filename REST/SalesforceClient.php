@@ -67,6 +67,9 @@ class SalesforceClient
         try {
             $this->client = new Client([
                 'base_uri' => $this->baseUrl,
+                'headers' => [
+                    "Authorization" => "Bearer ".$accessToken,
+                ]
             ]);
 
             return $this;
@@ -78,7 +81,7 @@ class SalesforceClient
 
     public function getLeadById($objectId)
     {
-        $res = $this->client->request('sobjects/Lead/'.$objectId);
+        $res = $this->client->request('GET', 'sobjects/Lead/'.$objectId);
         return json_decode($res->getBody());
     }
 
@@ -90,7 +93,7 @@ class SalesforceClient
      */
     public function getQuery($soql)
     {
-        $res = $this->client->request('query/?q='.urlencode($soql));
+        $res = $this->client->request('GET', 'query/?q='.urlencode($soql));
         return json_decode($res->getBody());
     }
 }
