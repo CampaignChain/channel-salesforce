@@ -32,7 +32,12 @@ class SalesforceController extends Controller
         'key_labels' => array('id', 'Client ID'),
         'secret_labels' => array('secret', 'Client Secret'),
         'config_url' => 'https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_defining_remote_access_applications.htm',
-        'parameters' => array(),
+        'parameters' => array(
+            'grant_type'    => 'authorization_code',
+            'display'       => 'popup',
+            'prompt'        => 'login',
+            'scope'         => 'api full refresh_token web',
+        ),
         'wrapper' => array(
             'class'=>'Hybrid_Providers_Salesforce',
             'path' => 'vendor/campaignchain/channel-salesforce/REST/SalesforceOAuth.php'
@@ -105,6 +110,9 @@ class SalesforceController extends Controller
                 $user->setProfileUrl($profile['profile']);
                 $user->setUserId($profile['user_id']);
                 $user->setZoneinfo($profile['zoneinfo']);
+                if($request->get('is_sandbox') == true){
+                    $user->setIsSandbox(true);
+                }
 
                 $em->persist($user);
                 $em->flush();

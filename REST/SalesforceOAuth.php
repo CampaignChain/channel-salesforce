@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+use CampaignChain\CoreBundle\Util\VariableUtil;
+
 /**
  * Hybrid_Providers_Salesforce
  *
@@ -57,7 +59,7 @@ class Hybrid_Providers_Salesforce extends Hybrid_Provider_Model_OAuth2
             'Authorization: Bearer '.$this->api->access_token,
         );
         $data = $this->api->get( $this->userProfileUrl );
-        $data = json_decode(json_encode($data), true);
+        $data = VariableUtil::json2Array($data);
 
         /*
          * Get the base URL with the instance to store it along with the

@@ -17,10 +17,12 @@
 
 namespace CampaignChain\Channel\SalesforceBundle\REST;
 
+use CampaignChain\Security\Authentication\Client\OAuthBundle\Entity\Application;
 use CampaignChain\Security\Authentication\Client\OAuthBundle\Entity\Token;
 use CampaignChain\Security\Authentication\Client\OAuthBundle\EntityService\ApplicationService;
 use CampaignChain\Security\Authentication\Client\OAuthBundle\EntityService\TokenService;
 use GuzzleHttp\Client;
+use Symfony\Component\HttpFoundation\Response;
 
 class SalesforceClient
 {
@@ -33,6 +35,11 @@ class SalesforceClient
 
     /** @var  Client */
     protected $client;
+    /** @var  Application */
+    protected $application;
+    /** @var  Token */
+    protected $token;
+    protected $isSandbox;
 
     public function __construct(
         $apiVersion,
@@ -49,21 +56,20 @@ class SalesforceClient
         return $this->connectByLocation($activity->getLocation());
     }
 
-    public function connectByLocation($location){
+    public function connectByLocation($location, $isSandbox = false){
+        $this->isSandbox = $isSandbox;
 
-        $this->organizerKey = $location->getIdentifier();
-
-        $application = $this->oauthApplicationService->getApplication(self::RESOURCE_OWNER);
+        $this->application = $this->oauthApplicationService->getApplication(self::RESOURCE_OWNER);
 
         /** @var Token $token */
-        $token = $this->oauthTokenService->getToken($location);
+        $this->token = $this->oauthTokenService->getToken($location);
 
-        $this->baseUrl = $token->getEndpoint().'/services/data/v'.$this->apiVersion.'/';
+        $this->baseUrl = $this->token->getEndpoint().'/services/data/v'.$this->apiVersion.'/';
 
-        return $this->connect($application->getKey(), $application->getSecret(), $token->getAccessToken(), $token->getTokenSecret());
+        return $this->connect($this->token->getAccessToken());
     }
 
-    public function connect($appKey, $appSecret, $accessToken, $tokenSecret){
+    public function connect($accessToken){
         try {
             $this->client = new Client([
                 'base_uri' => $this->baseUrl,
@@ -79,10 +85,59 @@ class SalesforceClient
         }
     }
 
-    public function getLeadById($objectId)
+    /**
+     * Generic request method to refresh token in case session expired.
+     *
+     * @param $method
+     * @param $uri
+     * @param array $body
+     * @return mixed
+     */
+    private function request($method, $uri, $body = array())
     {
-        $res = $this->client->request('GET', 'sobjects/Lead/'.$objectId);
+        $res = $this->client->request($method, $uri, $body);
+        $resBody = json_decode($res->getBody());
+
+        /*
+         * If the session expired, then we must request a new token with the
+         * refresh token.
+         */
+        if(isset($resBody->error) && $resBody->error['code'] == Response::HTTP_UNAUTHORIZED){
+            // Expired, so request a new token with the refresh token.
+            if($this->isSandbox){
+                $host = 'https://test.salesforce.com';
+            } else {
+                $host = 'https://login.salesforce.com';
+            }
+
+            $restUrl = $host.'/services/oauth2/token';
+            $params = [
+                'grant_type'    => 'refresh_token',
+                'refresh_token' => $this->token->getRefreshToken(),
+                'client_id'     => $this->application->getKey(),
+                'client_secret' => $this->application->getSecret(),
+            ];
+
+            $client = new Client();
+            $res = $client->post($restUrl, array('query' => $params));
+            $data = json_decode($res->getBody());
+
+            $this->oauthTokenService->refreshToken(
+                $this->token->getAccessToken(), $data->access_token
+            );
+
+            // Re-connect with new access token and re-issue the request with
+            // the new access token.
+            $this->connect($data->access_token);
+            $res = $this->client->request($method, $uri, $body);
+        }
+
         return json_decode($res->getBody());
+    }
+
+    public function getLeadById($id)
+    {
+        return $this->request('GET', 'sobjects/Lead/'.$id);
     }
 
     /**
@@ -93,7 +148,13 @@ class SalesforceClient
      */
     public function getQuery($soql)
     {
-        $res = $this->client->request('GET', 'query/?q='.urlencode($soql));
-        return json_decode($res->getBody());
+        return $this->request('GET', 'query/?q='.urlencode($soql));
+    }
+
+    public function updateLead($id, $data)
+    {
+        return $this->request('PATCH', 'sobjects/Lead/'.$id, [
+            'json' => $data
+        ]);
     }
 }
