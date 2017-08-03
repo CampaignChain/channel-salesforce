@@ -17,12 +17,14 @@
 
 namespace CampaignChain\Channel\SalesforceBundle\REST;
 
+use CampaignChain\CoreBundle\Util\VariableUtil;
 use CampaignChain\Security\Authentication\Client\OAuthBundle\Entity\Application;
 use CampaignChain\Security\Authentication\Client\OAuthBundle\Entity\Token;
 use CampaignChain\Security\Authentication\Client\OAuthBundle\EntityService\ApplicationService;
 use CampaignChain\Security\Authentication\Client\OAuthBundle\EntityService\TokenService;
 use GuzzleHttp\Client;
 use Symfony\Component\HttpFoundation\Response;
+use GuzzleHttp\Exception\RequestException;
 
 class SalesforceClient
 {
@@ -95,44 +97,54 @@ class SalesforceClient
      */
     private function request($method, $uri, $body = array())
     {
-        $res = $this->client->request($method, $uri, $body);
-        $resBody = json_decode($res->getBody());
-
-        /*
-         * If the session expired, then we must request a new token with the
-         * refresh token.
-         */
-        if(isset($resBody->error) && $resBody->error['code'] == Response::HTTP_UNAUTHORIZED){
-            // Expired, so request a new token with the refresh token.
-            if($this->isSandbox){
-                $host = 'https://test.salesforce.com';
-            } else {
-                $host = 'https://login.salesforce.com';
-            }
-
-            $restUrl = $host.'/services/oauth2/token';
-            $params = [
-                'grant_type'    => 'refresh_token',
-                'refresh_token' => $this->token->getRefreshToken(),
-                'client_id'     => $this->application->getKey(),
-                'client_secret' => $this->application->getSecret(),
-            ];
-
-            $client = new Client();
-            $res = $client->post($restUrl, array('query' => $params));
-            $data = json_decode($res->getBody());
-
-            $this->oauthTokenService->refreshToken(
-                $this->token->getAccessToken(), $data->access_token
-            );
-
-            // Re-connect with new access token and re-issue the request with
-            // the new access token.
-            $this->connect($data->access_token);
+        try {
             $res = $this->client->request($method, $uri, $body);
+            return json_decode($res->getBody());
+        } catch(RequestException $e){
+            $res = VariableUtil::json2Array(
+                json_decode($e->getResponse()->getBody()->getContents())[0]
+            );
+            /*
+             * If the session expired, then we must request a new token with the
+             * refresh token.
+             */
+            if(isset($res['errorCode']) && $res['errorCode'] == 'INVALID_SESSION_ID'){
+                $this->refreshToken($method, $uri, $body);
+            } else {
+                throw new \Exception($e->getMessage());
+            }
+        }
+    }
+
+    protected function refreshToken($method, $uri, $body)
+    {
+        // Expired, so request a new token with the refresh token.
+        if($this->isSandbox){
+            $host = 'https://test.salesforce.com';
+        } else {
+            $host = 'https://login.salesforce.com';
         }
 
-        return json_decode($res->getBody());
+        $restUrl = $host.'/services/oauth2/token';
+        $params = [
+            'grant_type'    => 'refresh_token',
+            'refresh_token' => $this->token->getRefreshToken(),
+            'client_id'     => $this->application->getKey(),
+            'client_secret' => $this->application->getSecret(),
+        ];
+
+        $client = new Client();
+        $res = $client->post($restUrl, array('query' => $params));
+        $data = json_decode($res->getBody());
+
+        $this->oauthTokenService->refreshToken(
+            $this->token->getAccessToken(), $data->access_token
+        );
+
+        // Re-connect with new access token and re-issue the request with
+        // the new access token.
+        $this->connect($data->access_token);
+        return $this->client->request($method, $uri, $body);
     }
 
     public function getLeadById($id)
