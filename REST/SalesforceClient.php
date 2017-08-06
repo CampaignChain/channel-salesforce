@@ -147,9 +147,19 @@ class SalesforceClient
         return $this->client->request($method, $uri, $body);
     }
 
-    public function getLeadById($id)
+    public function getLeadById($id, array $fields = array())
     {
-        return $this->request('GET', 'sobjects/Lead/'.$id);
+        $requestOptions = array();
+
+        if(count($fields)){
+            $fieldsQuery = implode(',', $fields);
+            $requestOptions = array(
+                'query' => array(
+                    'fields' => $fieldsQuery
+                ),
+            );
+        }
+        return $this->request('GET', 'sobjects/Lead/'.$id, $requestOptions);
     }
 
     /**
