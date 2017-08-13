@@ -17,6 +17,7 @@
 
 namespace CampaignChain\Channel\SalesforceBundle\REST;
 
+use CampaignChain\CoreBundle\Exception\ExternalApiException;
 use CampaignChain\CoreBundle\Util\VariableUtil;
 use CampaignChain\Security\Authentication\Client\OAuthBundle\Entity\Application;
 use CampaignChain\Security\Authentication\Client\OAuthBundle\Entity\Token;
@@ -111,7 +112,7 @@ class SalesforceClient
             if(isset($res['errorCode']) && $res['errorCode'] == 'INVALID_SESSION_ID'){
                 $this->refreshToken($method, $uri, $body);
             } else {
-                throw new \Exception($e->getMessage());
+                throw new ExternalApiException($e->getMessage(), $e->getCode());
             }
         }
     }
