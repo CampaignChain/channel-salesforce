@@ -84,7 +84,7 @@ class SalesforceClient
             return $this;
         }
         catch (\Exception $e) {
-            throw new \Exception($e->getMessage());
+            throw new ExternalApiException($e->getMessage(), $e->getCode());
         }
     }
 
