@@ -84,7 +84,7 @@ class SalesforceClient
             return $this;
         }
         catch (\Exception $e) {
-            throw new ExternalApiException($e->getMessage(), $e->getCode());
+            throw new ExternalApiException($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -112,7 +112,7 @@ class SalesforceClient
             if(isset($res['errorCode']) && $res['errorCode'] == 'INVALID_SESSION_ID'){
                 $this->refreshToken($method, $uri, $body);
             } else {
-                throw new ExternalApiException($e->getMessage(), $e->getCode());
+                throw new ExternalApiException($e->getMessage(), $e->getCode(), $e);
             }
         }
     }
