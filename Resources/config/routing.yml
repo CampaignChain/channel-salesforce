@@ -13,9 +13,9 @@
 # limitations under the License.
 
 campaignchain_channel_salesforce_create:
-    pattern: /channel/salesforce/create
+    path: /channel/salesforce/create
     defaults: { _controller: CampaignChainChannelSalesforceBundle:Salesforce:create }
     
 campaignchain_channel_salesforce_login:
-    pattern:  /channel/salesforce/create/login
+    path:  /channel/salesforce/create/login
     defaults: { _controller: CampaignChainChannelSalesforceBundle:Salesforce:login }
