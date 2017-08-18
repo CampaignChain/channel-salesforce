@@ -180,4 +180,18 @@ class SalesforceClient
             'json' => $data
         ]);
     }
+
+    public function createAccount($data)
+    {
+        return $this->request('POST', 'sobjects/Account/', [
+            'json' => $data
+        ]);
+    }
+
+    public function updateAccount($id, $data)
+    {
+        return $this->request('PATCH', 'sobjects/Account/'.$id, [
+            'json' => $data
+        ]);
+    }
 }
