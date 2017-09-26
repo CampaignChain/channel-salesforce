@@ -181,6 +181,13 @@ class SalesforceClient
         ]);
     }
 
+    public function createLead($data)
+    {
+        return $this->request('POST', 'sobjects/Lead/', [
+            'json' => $data
+        ]);
+    }
+
     public function createAccount($data)
     {
         return $this->request('POST', 'sobjects/Account/', [
