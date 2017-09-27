@@ -201,4 +201,9 @@ class SalesforceClient
             'json' => $data
         ]);
     }
+
+    public function deleteAccount($id)
+    {
+        return $this->request('DELETE', 'sobjects/Account/'.$id);
+    }
 }
